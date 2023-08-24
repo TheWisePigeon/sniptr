@@ -21,6 +21,7 @@ var rootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
   rootCmd.AddCommand(InitCmd)
+  rootCmd.AddCommand(SetCmd)
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
@@ -28,6 +29,8 @@ func Execute() {
 }
 
 func init() {
+  // rootCmd.CompletionOptions.DisableDefaultCmd = true
+  // rootCmd.CompletionOptions.DisableDescriptions = true
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 

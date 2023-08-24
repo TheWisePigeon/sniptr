@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"database/sql"
 	"fmt"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/spf13/cobra"
 	"log"
 	"os"
 	"strings"
-
-	"github.com/spf13/cobra"
 )
 
 var InitCmd = &cobra.Command{
@@ -24,26 +25,34 @@ var InitCmd = &cobra.Command{
 			println("Detected old database. Do you really want to start from scratch? You will lose all your current saved snippets (y/n)")
 			fmt.Scanln(&confirmation)
 			if strings.ToLower(confirmation) == "y" {
-				println("About to create yo shit")
+				println("Deleting current database...")
+				db, err := sql.Open("sqlite3", sniptr_db)
+				if err != nil {
+					log.Fatal(err)
+				}
+				defer db.Close()
+				_, err = db.Exec("drop table if exists snippets;")
+				if err != nil {
+					log.Fatal(err)
+				}
+				println("Creating new database...")
+				_, err = db.Exec(`
+          create table snippets(
+            label text not null unique,
+            value text not null
+          );
+        `)
+				if err != nil {
+					log.Fatal(err)
+				}
+				println("New snippets database initialized")
+				return
 			} else if strings.ToLower(confirmation) == "n" {
 				println("Database initialization cancelled")
 				return
 			} else {
-				println("Invalid choice. Aborting operation")
-				return
+				log.Fatal("Invalid choice. Aborting operation")
 			}
-			println("Deleting current database...")
-			err := os.Remove(sniptr_db)
-			if err != nil {
-				log.Fatal(err)
-			}
-			println("Creating new database...")
-			_, err = os.Create(sniptr_db)
-			if err != nil {
-				log.Fatal(err)
-			}
-      println("New snippets database initialized")
-      return
 		} else if os.IsNotExist(err) {
 			_, err := os.Create(sniptr_db)
 			if err != nil {
